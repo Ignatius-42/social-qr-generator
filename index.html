@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Profile QR Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+            padding: 40px 30px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: border 0.3s;
+            font-family: inherit;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .platform-icon {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        .example {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        .generate-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .generate-btn:active {
+            transform: translateY(0);
+        }
+
+        .qr-result {
+            display: none;
+            text-align: center;
+            margin-top: 30px;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .qr-result.show {
+            display: block;
+        }
+
+        #qrcode {
+            display: inline-block;
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .qr-result h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .download-btn {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .download-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .share-btn {
+            background: #25D366;
+            color: white;
+        }
+
+        .share-btn:hover {
+            background: #20bd5a;
+            transform: translateY(-2px);
+        }
+
+        .clear-btn {
+            background: #f5f5f5;
+            color: #333;
+            margin-top: 15px;
+            width: 100%;
+        }
+
+        .clear-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .error {
+            color: #f44336;
+            font-size: 13px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 30px 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .action-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 Social Profile QR</h1>
+        <p class="subtitle">Generate QR codes for your social profiles</p>
+
+        <div id="formSection">
+            <div class="form-group">
+                <label for="platform">Select Platform</label>
+                <select id="platform">
+                    <option value="linkedin">LinkedIn</option>
+                    <option value="twitter">Twitter / X</option>
+                    <option value="instagram">Instagram</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="profileUrl">Profile URL</label>
+                <input 
+                    type="url" 
+                    id="profileUrl" 
+                    placeholder="Paste your profile URL here"
+                >
+                <div class="example" id="example">
+                    Example: https://linkedin.com/in/yourname
+                </div>
+                <div class="error" id="error"></div>
+            </div>
+
+            <button class="generate-btn" onclick="generateQR()">
+                Generate QR Code
+            </button>
+        </div>
+
+        <div class="qr-result" id="qrResult">
+            <h3>Your QR Code is Ready! 📱</h3>
+            <div id="qrcode"></div>
+            
+            <div class="button-group">
+                <button class="action-btn download-btn" onclick="downloadQR()">
+                    📥 Download
+                </button>
+                <button class="action-btn share-btn" id="shareBtn" onclick="shareQR()" style="display: none;">
+                    📤 Share
+                </button>
+            </div>
+
+            <button class="action-btn clear-btn" onclick="clearForm()">
+                🔄 Clear & Create New
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const examples = {
+            linkedin: 'Example: https://linkedin.com/in/yourname',
+            twitter: 'Example: https://twitter.com/yourhandle or https://x.com/yourhandle',
+            instagram: 'Example: https://instagram.com/yourhandle'
+        };
+
+        const validationPatterns = {
+            linkedin: /^https?:\/\/(www\.)?linkedin\.com\/(in|company)\/[\w-]+\/?$/i,
+            twitter: /^https?:\/\/(www\.)?(twitter\.com|x\.com)\/[\w]+\/?$/i,
+            instagram: /^https?:\/\/(www\.)?instagram\.com\/[\w.]+\/?$/i
+        };
+
+        let currentQRCode = null;
+        let currentURL = '';
+
+        // Update example text when platform changes
+        document.getElementById('platform').addEventListener('change', function() {
+            const platform = this.value;
+            document.getElementById('example').textContent = examples[platform];
+            document.getElementById('error').classList.remove('show');
+        });
+
+        // Check if Web Share API is supported
+        if (navigator.share && navigator.canShare) {
+            document.getElementById('shareBtn').style.display = 'inline-flex';
+        }
+
+        function validateURL(url, platform) {
+            const pattern = validationPatterns[platform];
+            return pattern.test(url);
+        }
+
+        function generateQR() {
+            const platform = document.getElementById('platform').value;
+            const url = document.getElementById('profileUrl').value.trim();
+            const errorEl = document.getElementById('error');
+
+            errorEl.classList.remove('show');
+
+            if (!url) {
+                errorEl.textContent = 'Please enter a profile URL';
+                errorEl.classList.add('show');
+                return;
+            }
+
+            if (!validateURL(url, platform)) {
+                const platformNames = {
+                    linkedin: 'LinkedIn',
+                    twitter: 'Twitter/X',
+                    instagram: 'Instagram'
+                };
+                errorEl.textContent = `This doesn't look like a valid ${platformNames[platform]} profile URL. ${examples[platform]}`;
+                errorEl.classList.add('show');
+                return;
+            }
+
+            currentURL = url;
+
+            // Clear previous QR code
+            document.getElementById('qrcode').innerHTML = '';
+
+            // Generate new QR code
+            currentQRCode = new QRCode(document.getElementById('qrcode'), {
+                text: url,
+                width: 256,
+                height: 256,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
+
+            // Show result section
+            document.getElementById('qrResult').classList.add('show');
+            
+            // Scroll to QR code on mobile
+            setTimeout(() => {
+                document.getElementById('qrResult').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 100);
+        }
+
+        function downloadQR() {
+            const canvas = document.querySelector('#qrcode canvas');
+            if (!canvas) return;
+
+            const platform = document.getElementById('platform').value;
+            const filename = `${platform}-qr-code.png`;
+
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+        }
+
+        async function shareQR() {
+            const canvas = document.querySelector('#qrcode canvas');
+            if (!canvas) return;
+
+            const platform = document.getElementById('platform').value;
+            const platformNames = {
+                linkedin: 'LinkedIn',
+                twitter: 'Twitter',
+                instagram: 'Instagram'
+            };
+
+            canvas.toBlob(async function(blob) {
+                const file = new File([blob], `${platform}-qr-code.png`, { type: 'image/png' });
+                
+                const shareData = {
+                    files: [file],
+                    title: `My ${platformNames[platform]} QR Code`,
+                    text: `Scan to connect with me on ${platformNames[platform]}`
+                };
+
+                if (navigator.canShare && navigator.canShare(shareData)) {
+                    try {
+                        await navigator.share(shareData);
+                    } catch (err) {
+                        if (err.name !== 'AbortError') {
+                            console.error('Error sharing:', err);
+                            alert('Could not share. Please use the Download button instead.');
+                        }
+                    }
+                } else {
+                    alert('Sharing is not supported on this device. Please use the Download button.');
+                }
+            });
+        }
+
+        function clearForm() {
+            document.getElementById('profileUrl').value = '';
+            document.getElementById('qrResult').classList.remove('show');
+            document.getElementById('error').classList.remove('show');
+            document.getElementById('profileUrl').focus();
+        }
+
+        // Allow Enter key to generate QR
+        document.getElementById('profileUrl').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                generateQR();
+            }
+        });
+    </script>
+</body>
+</html>
