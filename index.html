@@ -72,14 +72,6 @@
             border-color: #667eea;
         }
 
-        .platform-icon {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            margin-right: 8px;
-            vertical-align: middle;
-        }
-
         .example {
             font-size: 12px;
             color: #999;
@@ -125,13 +117,36 @@
             display: block;
         }
 
-        #qrcode {
+        #qrContainer {
             display: inline-block;
-            padding: 20px;
+            padding: 25px;
             background: white;
             border-radius: 15px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
+        }
+
+        #qrCanvas {
+            display: block;
+        }
+
+        .qr-info {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #f0f0f0;
+        }
+
+        .platform-name {
+            font-weight: 600;
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .username {
+            font-size: 15px;
+            color: #666;
+            font-family: 'Courier New', monospace;
         }
 
         .qr-result h3 {
@@ -257,7 +272,13 @@
 
         <div class="qr-result" id="qrResult">
             <h3>Your QR Code is Ready! 📱</h3>
-            <div id="qrcode"></div>
+            <div id="qrContainer">
+                <canvas id="qrCanvas"></canvas>
+                <div class="qr-info">
+                    <div class="platform-name" id="platformName"></div>
+                    <div class="username" id="usernameDisplay"></div>
+                </div>
+            </div>
             
             <div class="button-group">
                 <button class="action-btn download-btn" onclick="downloadQR()">
@@ -287,17 +308,27 @@
             instagram: /^https?:\/\/(www\.)?instagram\.com\/[\w.]+\/?$/i
         };
 
-        let currentQRCode = null;
-        let currentURL = '';
+        const platformLogos = {
+            linkedin: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHJ4PSI0IiBmaWxsPSIjMDA3NkIyIi8+PHBhdGggZD0iTTE1IDI3VjE3SDEyVjI3SDE1Wk0xMy41IDE1LjVDMTQuNiAxNS41IDE1LjUgMTQuNiAxNS41IDEzLjVDMTUuNSAxMi40IDE0LjYgMTEuNSAxMy41IDExLjVDMTIuNCAxMS41IDExLjUgMTIuNCAxMS41IDEzLjVDMTEuNSAxNC42IDEyLjQgMTUuNSAxMy41IDE1LjVaTTI4IDE3SDE4VjI3SDIxVjIyQzIxIDIwLjMgMjIuMyAxOSAyNSAxOUMyNy43IDE5IDI4IDIwLjMgMjggMjJWMjdIMjhWMTdaIiBmaWxsPSJ3aGl0ZSIvPjwvc3ZnPg==',
+            twitter: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHJ4PSI0IiBmaWxsPSIjMUQ5QkYwIi8+PHBhdGggZD0iTTI4IDEzQzI3LjIgMTMuNCAyNi40IDEzLjcgMjUuNSAxMy44QzI2LjQgMTMuMyAyNy4xIDEyLjUgMjcuNSAxMS41QzI2LjcgMTIgMjUuOCAxMi4zIDI0LjggMTIuNUMyNC4xIDExLjcgMjMgMTEuMiAyMiAxMS4yQzIwIDExLjIgMTguMyAxMi45IDE4LjMgMTVDMTguMyAxNS4zIDE4LjMgMTUuNiAxOC40IDE1LjlDMTUuNSAxNS43IDEyLjkgMTQuMiAxMS4yIDEyQzEwLjkgMTIuNiAxMC43IDEzLjMgMTAuNyAxNEMxMC43IDE1LjQgMTEuNCAxNi42IDEyLjUgMTcuM0MxMS44IDE3LjMgMTEuMiAxNy4xIDEwLjcgMTYuOEMxMC43IDE2LjggMTAuNyAxNi44IDEwLjcgMTYuOUMxMC43IDE4LjcgMTIgMjAuMiAxMy43IDIwLjVDMTMuNCAyMC42IDEzLjEgMjAuNiAxMi43IDIwLjZDMTIuNSAyMC42IDEyLjIgMjAuNiAxMiAyMC41QzEyLjUgMjIgMTMuOSAyMy4xIDE1LjYgMjMuMUMxNC4zIDI0LjEgMTIuNyAyNC43IDEwLjkgMjQuN0MxMC42IDI0LjcgMTAuMyAyNC43IDEwIDI0LjdDMTEuNyAyNS43IDEzLjcgMjYuMyAxNS44IDI2LjNDMjIgMjYuMyAyNS40IDIwLjcgMjUuNCAyNS43QzI1LjQgMjUuNiAyNS40IDI1LjQgMjUuNCAyNS4zQzI2LjIgMjQuOCAyNi45IDI0LjEgMjcuNSAyMy4zQzI2LjggMjMuNiAyNiAyMy44IDI1LjIgMjMuOUMyNi4xIDIzLjQgMjYuOCAyMi42IDI3LjEgMjEuNkMyNi4zIDIyLjEgMjUuNCAyMi40IDI0LjUgMjIuNkMyMy44IDIxLjggMjIuNyAyMS4zIDIxLjUgMjEuM0MxOS41IDIxLjMgMTcuOCAyMyAxNy44IDI1QzE3LjggMjUuMyAxNy44IDI1LjYgMTcuOSAyNS45QzE1IDI1LjcgMTIuNCAyNC4yIDEwLjcgMjJDMTAuNCAyMi42IDEwLjIgMjMuMyAxMC4yIDI0QzEwLjIgMjUuNCAxMC45IDI2LjYgMTIgMjcuM0MxMS4zIDI3LjMgMTAuNyAyNy4xIDEwLjIgMjYuOEMxMC4yIDI2LjggMTAuMiAyNi44IDEwLjIgMjYuOUMxMC4yIDI4LjcgMTEuNSAzMC4yIDEzLjIgMzAuNUMxMi45IDMwLjYgMTIuNiAzMC42IDEyLjIgMzAuNkMxMiAzMC42IDExLjcgMzAuNiAxMS41IDMwLjVDMTIgMzIgMTMuNCAzMy4xIDE1LjEgMzMuMUMxMy44IDM0LjEgMTIuMiAzNC43IDEwLjQgMzQuN0MxMC4xIDM0LjcgOS44IDM0LjcgOS41IDM0LjdDMTEuMiAzNS43IDEzLjIgMzYuMyAxNS4zIDM2LjNDMjEuNSAzNi4zIDI0LjkgMzAuNyAyNC45IDM1LjdDMjQuOSAzNS42IDI0LjkgMzUuNCAyNC45IDM1LjNDMjUuNyAzNC44IDI2LjQgMzQuMSAyNyAzMy4zQzI2LjMgMzMuNiAyNS41IDMzLjggMjQuNyAzMy45QzI1LjYgMzMuNCAyNi4zIDMyLjYgMjYuNiAzMS42QzI1LjggMzIuMSAyNC45IDMyLjQgMjQgMzIuNkMyMy4zIDMxLjggMjIuMiAzMS4zIDIxIDMxLjNDMTkgMzEuMyAxNy4zIDMzIDE3LjMgMzVDMTcuMyAzNS4zIDE3LjMgMzUuNiAxNy40IDM1LjlDMTQuNSAzNS43IDExLjkgMzQuMiAxMC4yIDMyQzkuOSAzMi42IDkuNyAzMy4zIDkuNyAzNEM5LjcgMzUuNCA= ',
+            instagram: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImlnIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojRjU4NTI5OyIvPjxzdG9wIG9mZnNldD0iNTAlIiBzdHlsZT0ic3RvcC1jb2xvcjojREQyQTdCOyIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6IzgxMzRBRjsiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHJ4PSI0IiBmaWxsPSJ1cmwoI2lnKSIvPjxyZWN0IHg9IjEyIiB5PSIxMiIgd2lkdGg9IjE2IiBoZWlnaHQ9IjE2IiByeD0iNCIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIiBmaWxsPSJub25lIi8+PGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iNCIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIiBmaWxsPSJub25lIi8+PGNpcmNsZSBjeD0iMjUiIGN5PSIxNSIgcj0iMS41IiBmaWxsPSJ3aGl0ZSIvPjwvc3ZnPg=='
+        };
 
-        // Update example text when platform changes
+        const platformNames = {
+            linkedin: 'LinkedIn',
+            twitter: 'Twitter',
+            instagram: 'Instagram'
+        };
+
+        let currentURL = '';
+        let currentPlatform = '';
+
         document.getElementById('platform').addEventListener('change', function() {
             const platform = this.value;
             document.getElementById('example').textContent = examples[platform];
             document.getElementById('error').classList.remove('show');
         });
 
-        // Check if Web Share API is supported
         if (navigator.share && navigator.canShare) {
             document.getElementById('shareBtn').style.display = 'inline-flex';
         }
@@ -305,6 +336,23 @@
         function validateURL(url, platform) {
             const pattern = validationPatterns[platform];
             return pattern.test(url);
+        }
+
+        function extractUsername(url, platform) {
+            let username = '';
+            
+            if (platform === 'linkedin') {
+                const match = url.match(/linkedin\.com\/(in|company)\/([\w-]+)/i);
+                username = match ? match[2] : '';
+            } else if (platform === 'twitter') {
+                const match = url.match(/(twitter\.com|x\.com)\/([\w]+)/i);
+                username = match ? '@' + match[2] : '';
+            } else if (platform === 'instagram') {
+                const match = url.match(/instagram\.com\/([\w.]+)/i);
+                username = match ? '@' + match[1] : '';
+            }
+            
+            return username;
         }
 
         function generateQR() {
@@ -321,48 +369,108 @@
             }
 
             if (!validateURL(url, platform)) {
-                const platformNames = {
-                    linkedin: 'LinkedIn',
-                    twitter: 'Twitter/X',
-                    instagram: 'Instagram'
-                };
                 errorEl.textContent = `This doesn't look like a valid ${platformNames[platform]} profile URL. ${examples[platform]}`;
                 errorEl.classList.add('show');
                 return;
             }
 
             currentURL = url;
+            currentPlatform = platform;
+            const username = extractUsername(url, platform);
 
-            // Clear previous QR code
-            document.getElementById('qrcode').innerHTML = '';
+            // Update platform name and username display
+            document.getElementById('platformName').textContent = platformNames[platform];
+            document.getElementById('usernameDisplay').textContent = username;
 
-            // Generate new QR code
-            currentQRCode = new QRCode(document.getElementById('qrcode'), {
+            // Create QR code on canvas
+            const canvas = document.getElementById('qrCanvas');
+            const size = 280;
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = size;
+            canvas.height = size;
+
+            // Generate QR using temporary container
+            const tempDiv = document.createElement('div');
+            const qr = new QRCode(tempDiv, {
                 text: url,
-                width: 256,
-                height: 256,
+                width: size,
+                height: size,
                 colorDark: '#000000',
                 colorLight: '#ffffff',
                 correctLevel: QRCode.CorrectLevel.H
             });
 
+            // Wait for QR to generate, then draw to canvas
+            setTimeout(() => {
+                const qrImg = tempDiv.querySelector('img');
+                ctx.drawImage(qrImg, 0, 0, size, size);
+
+                // Draw platform logo in center
+                const logo = new Image();
+                logo.onload = function() {
+                    const logoSize = size * 0.2; // 20% of QR size
+                    const logoX = (size - logoSize) / 2;
+                    const logoY = (size - logoSize) / 2;
+                    
+                    // White background for logo
+                    ctx.fillStyle = 'white';
+                    ctx.fillRect(logoX - 5, logoY - 5, logoSize + 10, logoSize + 10);
+                    
+                    // Draw logo
+                    ctx.drawImage(logo, logoX, logoY, logoSize, logoSize);
+                };
+                logo.src = platformLogos[platform];
+            }, 100);
+
             // Show result section
             document.getElementById('qrResult').classList.add('show');
             
-            // Scroll to QR code on mobile
             setTimeout(() => {
                 document.getElementById('qrResult').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }, 100);
         }
 
         function downloadQR() {
-            const canvas = document.querySelector('#qrcode canvas');
-            if (!canvas) return;
+            const container = document.getElementById('qrContainer');
+            const canvas = document.getElementById('qrCanvas');
+            const platformName = document.getElementById('platformName').textContent;
+            const username = document.getElementById('usernameDisplay').textContent;
 
-            const platform = document.getElementById('platform').value;
-            const filename = `${platform}-qr-code.png`;
+            // Create a new canvas with QR + text
+            const finalCanvas = document.createElement('canvas');
+            const ctx = finalCanvas.getContext('2d');
+            
+            const qrSize = 280;
+            const padding = 25;
+            const textHeight = 60;
+            
+            finalCanvas.width = qrSize + (padding * 2);
+            finalCanvas.height = qrSize + (padding * 2) + textHeight;
 
-            canvas.toBlob(function(blob) {
+            // White background
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+
+            // Draw QR code
+            ctx.drawImage(canvas, padding, padding);
+
+            // Draw text
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#333';
+            
+            // Platform name
+            ctx.font = '600 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto';
+            ctx.fillText(platformName, finalCanvas.width / 2, qrSize + padding + 25);
+            
+            // Username
+            ctx.fillStyle = '#666';
+            ctx.font = '15px "Courier New", monospace';
+            ctx.fillText(username, finalCanvas.width / 2, qrSize + padding + 45);
+
+            // Download
+            const filename = `${currentPlatform}-qr-${username.replace('@', '')}.png`;
+            finalCanvas.toBlob(function(blob) {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
@@ -375,23 +483,42 @@
         }
 
         async function shareQR() {
-            const canvas = document.querySelector('#qrcode canvas');
-            if (!canvas) return;
+            const container = document.getElementById('qrContainer');
+            const canvas = document.getElementById('qrCanvas');
+            const platformName = document.getElementById('platformName').textContent;
+            const username = document.getElementById('usernameDisplay').textContent;
 
-            const platform = document.getElementById('platform').value;
-            const platformNames = {
-                linkedin: 'LinkedIn',
-                twitter: 'Twitter',
-                instagram: 'Instagram'
-            };
+            // Create final canvas (same as download)
+            const finalCanvas = document.createElement('canvas');
+            const ctx = finalCanvas.getContext('2d');
+            
+            const qrSize = 280;
+            const padding = 25;
+            const textHeight = 60;
+            
+            finalCanvas.width = qrSize + (padding * 2);
+            finalCanvas.height = qrSize + (padding * 2) + textHeight;
 
-            canvas.toBlob(async function(blob) {
-                const file = new File([blob], `${platform}-qr-code.png`, { type: 'image/png' });
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+            ctx.drawImage(canvas, padding, padding);
+            
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#333';
+            ctx.font = '600 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto';
+            ctx.fillText(platformName, finalCanvas.width / 2, qrSize + padding + 25);
+            
+            ctx.fillStyle = '#666';
+            ctx.font = '15px "Courier New", monospace';
+            ctx.fillText(username, finalCanvas.width / 2, qrSize + padding + 45);
+
+            finalCanvas.toBlob(async function(blob) {
+                const file = new File([blob], `${currentPlatform}-qr.png`, { type: 'image/png' });
                 
                 const shareData = {
                     files: [file],
-                    title: `My ${platformNames[platform]} QR Code`,
-                    text: `Scan to connect with me on ${platformNames[platform]}`
+                    title: `My ${platformName} QR Code`,
+                    text: `Scan to connect with me on ${platformName}`
                 };
 
                 if (navigator.canShare && navigator.canShare(shareData)) {
@@ -416,7 +543,6 @@
             document.getElementById('profileUrl').focus();
         }
 
-        // Allow Enter key to generate QR
         document.getElementById('profileUrl').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 generateQR();
