@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" width=device-width, initial-scale=1.0">
     <title>Social Profile QR Generator</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
@@ -308,12 +308,6 @@
             instagram: /^https?:\/\/(www\.)?instagram\.com\/[\w.]+\/?$/i
         };
 
-        const platformLogos = {
-            linkedin: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHJ4PSI0IiBmaWxsPSIjMDA3NkIyIi8+PHBhdGggZD0iTTE1IDI3VjE3SDEyVjI3SDE1Wk0xMy41IDE1LjVDMTQuNiAxNS41IDE1LjUgMTQuNiAxNS41IDEzLjVDMTUuNSAxMi40IDE0LjYgMTEuNSAxMy41IDExLjVDMTIuNCAxMS41IDExLjUgMTIuNCAxMS41IDEzLjVDMTEuNSAxNC42IDEyLjQgMTUuNSAxMy41IDE1LjVaTTI4IDE3SDE4VjI3SDIxVjIyQzIxIDIwLjMgMjIuMyAxOSAyNSAxOUMyNy43IDE5IDI4IDIwLjMgMjggMjJWMjdIMjhWMTdaIiBmaWxsPSJ3aGl0ZSIvPjwvc3ZnPg==',
-            twitter: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHJ4PSI0IiBmaWxsPSIjMUQ5QkYwIi8+PHBhdGggZD0iTTI4IDEzQzI3LjIgMTMuNCAyNi40IDEzLjcgMjUuNSAxMy44QzI2LjQgMTMuMyAyNy4xIDEyLjUgMjcuNSAxMS41QzI2LjcgMTIgMjUuOCAxMi4zIDI0LjggMTIuNUMyNC4xIDExLjcgMjMgMTEuMiAyMiAxMS4yQzIwIDExLjIgMTguMyAxMi45IDE4LjMgMTVDMTguMyAxNS4zIDE4LjMgMTUuNiAxOC40IDE1LjlDMTUuNSAxNS43IDEyLjkgMTQuMiAxMS4yIDEyQzEwLjkgMTIuNiAxMC43IDEzLjMgMTAuNyAxNEMxMC43IDE1LjQgMTEuNCAxNi42IDEyLjUgMTcuM0MxMS44IDE3LjMgMTEuMiAxNy4xIDEwLjcgMTYuOEMxMC43IDE2LjggMTAuNyAxNi44IDEwLjcgMTYuOUMxMC43IDE4LjcgMTIgMjAuMiAxMy43IDIwLjVDMTMuNCAyMC42IDEzLjEgMjAuNiAxMi43IDIwLjZDMTIuNSAyMC42IDEyLjIgMjAuNiAxMiAyMC41QzEyLjUgMjIgMTMuOSAyMy4xIDE1LjYgMjMuMUMxNC4zIDI0LjEgMTIuNyAyNC43IDEwLjkgMjQuN0MxMC42IDI0LjcgMTAuMyAyNC43IDEwIDI0LjdDMTEuNyAyNS43IDEzLjcgMjYuMyAxNS44IDI2LjNDMjIgMjYuMyAyNS40IDIwLjcgMjUuNCAyNS43QzI1LjQgMjUuNiAyNS40IDI1LjQgMjUuNCAyNS4zQzI2LjIgMjQuOCAyNi45IDI0LjEgMjcuNSAyMy4zQzI2LjggMjMuNiAyNiAyMy44IDI1LjIgMjMuOUMyNi4xIDIzLjQgMjYuOCAyMi42IDI3LjEgMjEuNkMyNi4zIDIyLjEgMjUuNCAyMi40IDI0LjUgMjIuNkMyMy44IDIxLjggMjIuNyAyMS4zIDIxLjUgMjEuM0MxOS41IDIxLjMgMTcuOCAyMyAxNy44IDI1QzE3LjggMjUuMyAxNy44IDI1LjYgMTcuOSAyNS45QzE1IDI1LjcgMTIuNCAyNC4yIDEwLjcgMjJDMTAuNCAyMi42IDEwLjIgMjMuMyAxMC4yIDI0QzEwLjIgMjUuNCAxMC45IDI2LjYgMTIgMjcuM0MxMS4zIDI3LjMgMTAuNyAyNy4xIDEwLjIgMjYuOEMxMC4yIDI2LjggMTAuMiAyNi44IDEwLjIgMjYuOUMxMC4yIDI4LjcgMTEuNSAzMC4yIDEzLjIgMzAuNUMxMi45IDMwLjYgMTIuNiAzMC42IDEyLjIgMzAuNkMxMiAzMC42IDExLjcgMzAuNiAxMS41IDMwLjVDMTIgMzIgMTMuNCAzMy4xIDE1LjEgMzMuMUMxMy44IDM0LjEgMTIuMiAzNC43IDEwLjQgMzQuN0MxMC4xIDM0LjcgOS44IDM0LjcgOS41IDM0LjdDMTEuMiAzNS43IDEzLjIgMzYuMyAxNS4zIDM2LjNDMjEuNSAzNi4zIDI0LjkgMzAuNyAyNC45IDM1LjdDMjQuOSAzNS42IDI0LjkgMzUuNCAyNC45IDM1LjNDMjUuNyAzNC44IDI2LjQgMzQuMSAyNyAzMy4zQzI2LjMgMzMuNiAyNS41IDMzLjggMjQuNyAzMy45QzI1LjYgMzMuNCAyNi4zIDMyLjYgMjYuNiAzMS42QzI1LjggMzIuMSAyNC45IDMyLjQgMjQgMzIuNkMyMy4zIDMxLjggMjIuMiAzMS4zIDIxIDMxLjNDMTkgMzEuMyAxNy4zIDMzIDE3LjMgMzVDMTcuMyAzNS4zIDE3LjMgMzUuNiAxNy40IDM1LjlDMTQuNSAzNS43IDExLjkgMzQuMiAxMC4yIDMyQzkuOSAzMi42IDkuNyAzMy4zIDkuNyAzNEM5LjcgMzUuNCA= ',
-            instagram: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImlnIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojRjU4NTI5OyIvPjxzdG9wIG9mZnNldD0iNTAlIiBzdHlsZT0ic3RvcC1jb2xvcjojREQyQTdCOyIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6IzgxMzRBRjsiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHJ4PSI0IiBmaWxsPSJ1cmwoI2lnKSIvPjxyZWN0IHg9IjEyIiB5PSIxMiIgd2lkdGg9IjE2IiBoZWlnaHQ9IjE2IiByeD0iNCIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIiBmaWxsPSJub25lIi8+PGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iNCIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIiBmaWxsPSJub25lIi8+PGNpcmNsZSBjeD0iMjUiIGN5PSIxNSIgcj0iMS41IiBmaWxsPSJ3aGl0ZSIvPjwvc3ZnPg=='
-        };
-
         const platformNames = {
             linkedin: 'LinkedIn',
             twitter: 'Twitter',
@@ -353,6 +347,63 @@
             }
             
             return username;
+        }
+
+        // Draw platform logos using Canvas API (no image loading needed!)
+        function drawPlatformLogo(ctx, platform, x, y, size) {
+            ctx.save();
+            
+            if (platform === 'linkedin') {
+                // LinkedIn blue background
+                ctx.fillStyle = '#0077B5';
+                ctx.fillRect(x, y, size, size);
+                
+                // White "in" text
+                ctx.fillStyle = 'white';
+                ctx.font = `bold ${size * 0.5}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('in', x + size/2, y + size/2);
+                
+            } else if (platform === 'twitter') {
+                // Twitter blue background
+                ctx.fillStyle = '#1DA1F2';
+                ctx.fillRect(x, y, size, size);
+                
+                // Simple bird shape using paths
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                const cx = x + size/2;
+                const cy = y + size/2;
+                // Simplified bird body
+                ctx.arc(cx, cy, size * 0.25, 0, Math.PI * 2);
+                ctx.fill();
+                // Wing
+                ctx.beginPath();
+                ctx.moveTo(cx - size * 0.15, cy);
+                ctx.lineTo(cx + size * 0.3, cy - size * 0.15);
+                ctx.lineTo(cx + size * 0.15, cy + size * 0.1);
+                ctx.fill();
+                
+            } else if (platform === 'instagram') {
+                // Instagram gradient background
+                const gradient = ctx.createLinearGradient(x, y, x + size, y + size);
+                gradient.addColorStop(0, '#833AB4');
+                gradient.addColorStop(0.5, '#E1306C');
+                gradient.addColorStop(1, '#FD1D1D');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(x, y, size, size);
+                
+                // Camera icon (simplified)
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = size * 0.08;
+                ctx.strokeRect(x + size * 0.2, y + size * 0.25, size * 0.6, size * 0.5);
+                ctx.beginPath();
+                ctx.arc(x + size/2, y + size/2, size * 0.15, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            
+            ctx.restore();
         }
 
         function generateQR() {
@@ -401,27 +452,33 @@
                 correctLevel: QRCode.CorrectLevel.H
             });
 
-            // Wait for QR to generate, then draw to canvas
+            // Wait for QR to generate, then draw to canvas with logo
             setTimeout(() => {
                 const qrImg = tempDiv.querySelector('img');
-                ctx.drawImage(qrImg, 0, 0, size, size);
+                
+                qrImg.onload = function() {
+                    // Draw QR code
+                    ctx.drawImage(qrImg, 0, 0, size, size);
 
-                // Draw platform logo in center
-                const logo = new Image();
-                logo.onload = function() {
-                    const logoSize = size * 0.2; // 20% of QR size
+                    // Draw platform logo in center
+                    const logoSize = size * 0.18; // 18% of QR size
                     const logoX = (size - logoSize) / 2;
                     const logoY = (size - logoSize) / 2;
                     
-                    // White background for logo
+                    // White background for logo (with padding)
+                    const padding = 8;
                     ctx.fillStyle = 'white';
-                    ctx.fillRect(logoX - 5, logoY - 5, logoSize + 10, logoSize + 10);
+                    ctx.fillRect(logoX - padding, logoY - padding, logoSize + padding * 2, logoSize + padding * 2);
                     
-                    // Draw logo
-                    ctx.drawImage(logo, logoX, logoY, logoSize, logoSize);
+                    // Draw logo using canvas (no external images!)
+                    drawPlatformLogo(ctx, platform, logoX, logoY, logoSize);
                 };
-                logo.src = platformLogos[platform];
-            }, 100);
+                
+                // Trigger load if already cached
+                if (qrImg.complete) {
+                    qrImg.onload();
+                }
+            }, 150);
 
             // Show result section
             document.getElementById('qrResult').classList.add('show');
@@ -432,7 +489,6 @@
         }
 
         function downloadQR() {
-            const container = document.getElementById('qrContainer');
             const canvas = document.getElementById('qrCanvas');
             const platformName = document.getElementById('platformName').textContent;
             const username = document.getElementById('usernameDisplay').textContent;
@@ -483,7 +539,6 @@
         }
 
         async function shareQR() {
-            const container = document.getElementById('qrContainer');
             const canvas = document.getElementById('qrCanvas');
             const platformName = document.getElementById('platformName').textContent;
             const username = document.getElementById('usernameDisplay').textContent;
