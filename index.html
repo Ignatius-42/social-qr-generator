@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Social Profile QR Generator</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
@@ -119,34 +119,13 @@
 
         #qrContainer {
             display: inline-block;
-            padding: 25px;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
         }
 
         #qrCanvas {
             display: block;
-        }
-
-        .qr-info {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 2px solid #f0f0f0;
-        }
-
-        .platform-name {
-            font-weight: 600;
-            font-size: 16px;
-            color: #333;
-            margin-bottom: 5px;
-        }
-
-        .username {
-            font-size: 15px;
-            color: #666;
-            font-family: 'Courier New', monospace;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
         }
 
         .qr-result h3 {
@@ -240,7 +219,7 @@
 <body>
     <div class="container">
         <h1>🔗 Social Profile QR</h1>
-        <p class="subtitle">Generate QR codes for your social profiles</p>
+        <p class="subtitle">Generate platform-themed QR codes</p>
 
         <div id="formSection">
             <div class="form-group">
@@ -274,10 +253,6 @@
             <h3>Your QR Code is Ready! 📱</h3>
             <div id="qrContainer">
                 <canvas id="qrCanvas"></canvas>
-                <div class="qr-info">
-                    <div class="platform-name" id="platformName"></div>
-                    <div class="username" id="usernameDisplay"></div>
-                </div>
             </div>
             
             <div class="button-group">
@@ -312,6 +287,34 @@
             linkedin: 'LinkedIn',
             twitter: 'Twitter',
             instagram: 'Instagram'
+        };
+
+        // Platform-specific styling configs
+        const platformStyles = {
+            linkedin: {
+                qrColor: '#ffffff',
+                bgGradient: ['#0A66C2', '#1976D2'],
+                textColor: '#ffffff',
+                borderColor: '#0A66C2',
+                headerText: 'CONNECT ON',
+                platformText: 'LINKEDIN'
+            },
+            twitter: {
+                qrColor: '#1DA1F2',
+                bgColor: '#E8F5FE',
+                textColor: '#1DA1F2',
+                borderColor: '#1DA1F2',
+                headerText: 'Follow me:',
+                platformText: ''
+            },
+            instagram: {
+                qrColor: '#ffffff',
+                bgGradient: ['#833AB4', '#E1306C', '#FD1D1D'],
+                textColor: '#ffffff',
+                borderColor: '#E1306C',
+                headerText: '',
+                platformText: 'Instagram'
+            }
         };
 
         let currentURL = '';
@@ -349,63 +352,6 @@
             return username;
         }
 
-        // Draw platform logos using Canvas API (no image loading needed!)
-        function drawPlatformLogo(ctx, platform, x, y, size) {
-            ctx.save();
-            
-            if (platform === 'linkedin') {
-                // LinkedIn blue background
-                ctx.fillStyle = '#0077B5';
-                ctx.fillRect(x, y, size, size);
-                
-                // White "in" text
-                ctx.fillStyle = 'white';
-                ctx.font = `bold ${size * 0.5}px Arial`;
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText('in', x + size/2, y + size/2);
-                
-            } else if (platform === 'twitter') {
-                // Twitter blue background
-                ctx.fillStyle = '#1DA1F2';
-                ctx.fillRect(x, y, size, size);
-                
-                // Simple bird shape using paths
-                ctx.fillStyle = 'white';
-                ctx.beginPath();
-                const cx = x + size/2;
-                const cy = y + size/2;
-                // Simplified bird body
-                ctx.arc(cx, cy, size * 0.25, 0, Math.PI * 2);
-                ctx.fill();
-                // Wing
-                ctx.beginPath();
-                ctx.moveTo(cx - size * 0.15, cy);
-                ctx.lineTo(cx + size * 0.3, cy - size * 0.15);
-                ctx.lineTo(cx + size * 0.15, cy + size * 0.1);
-                ctx.fill();
-                
-            } else if (platform === 'instagram') {
-                // Instagram gradient background
-                const gradient = ctx.createLinearGradient(x, y, x + size, y + size);
-                gradient.addColorStop(0, '#833AB4');
-                gradient.addColorStop(0.5, '#E1306C');
-                gradient.addColorStop(1, '#FD1D1D');
-                ctx.fillStyle = gradient;
-                ctx.fillRect(x, y, size, size);
-                
-                // Camera icon (simplified)
-                ctx.strokeStyle = 'white';
-                ctx.lineWidth = size * 0.08;
-                ctx.strokeRect(x + size * 0.2, y + size * 0.25, size * 0.6, size * 0.5);
-                ctx.beginPath();
-                ctx.arc(x + size/2, y + size/2, size * 0.15, 0, Math.PI * 2);
-                ctx.stroke();
-            }
-            
-            ctx.restore();
-        }
-
         function generateQR() {
             const platform = document.getElementById('platform').value;
             const url = document.getElementById('profileUrl').value.trim();
@@ -428,61 +374,109 @@
             currentURL = url;
             currentPlatform = platform;
             const username = extractUsername(url, platform);
+            const style = platformStyles[platform];
 
-            // Update platform name and username display
-            document.getElementById('platformName').textContent = platformNames[platform];
-            document.getElementById('usernameDisplay').textContent = username;
-
-            // Create QR code on canvas
+            // Create styled QR on canvas
             const canvas = document.getElementById('qrCanvas');
-            const size = 280;
+            const qrSize = 260;
+            const padding = 40;
+            const headerHeight = 50;
+            const footerHeight = 80;
+            const totalHeight = headerHeight + qrSize + footerHeight + (padding * 2);
+            const totalWidth = qrSize + (padding * 2);
+
+            canvas.width = totalWidth;
+            canvas.height = totalHeight;
             const ctx = canvas.getContext('2d');
+
+            // Draw background
+            if (style.bgGradient) {
+                const gradient = ctx.createLinearGradient(0, 0, 0, totalHeight);
+                if (style.bgGradient.length === 2) {
+                    gradient.addColorStop(0, style.bgGradient[0]);
+                    gradient.addColorStop(1, style.bgGradient[1]);
+                } else {
+                    gradient.addColorStop(0, style.bgGradient[0]);
+                    gradient.addColorStop(0.5, style.bgGradient[1]);
+                    gradient.addColorStop(1, style.bgGradient[2]);
+                }
+                ctx.fillStyle = gradient;
+            } else {
+                ctx.fillStyle = style.bgColor;
+            }
             
-            canvas.width = size;
-            canvas.height = size;
+            // Rounded rectangle background
+            const radius = 12;
+            ctx.beginPath();
+            ctx.moveTo(radius, 0);
+            ctx.lineTo(totalWidth - radius, 0);
+            ctx.quadraticCurveTo(totalWidth, 0, totalWidth, radius);
+            ctx.lineTo(totalWidth, totalHeight - radius);
+            ctx.quadraticCurveTo(totalWidth, totalHeight, totalWidth - radius, totalHeight);
+            ctx.lineTo(radius, totalHeight);
+            ctx.quadraticCurveTo(0, totalHeight, 0, totalHeight - radius);
+            ctx.lineTo(0, radius);
+            ctx.quadraticCurveTo(0, 0, radius, 0);
+            ctx.closePath();
+            ctx.fill();
 
             // Generate QR using temporary container
             const tempDiv = document.createElement('div');
             const qr = new QRCode(tempDiv, {
                 text: url,
-                width: size,
-                height: size,
-                colorDark: '#000000',
-                colorLight: '#ffffff',
+                width: qrSize,
+                height: qrSize,
+                colorDark: style.qrColor,
+                colorLight: 'rgba(0,0,0,0)',
                 correctLevel: QRCode.CorrectLevel.H
             });
 
-            // Wait for QR to generate, then draw to canvas with logo
+            // Wait for QR to generate
             setTimeout(() => {
                 const qrImg = tempDiv.querySelector('img');
                 
                 qrImg.onload = function() {
-                    // Draw QR code
-                    ctx.drawImage(qrImg, 0, 0, size, size);
-
-                    // Draw platform logo in center
-                    const logoSize = size * 0.18; // 18% of QR size
-                    const logoX = (size - logoSize) / 2;
-                    const logoY = (size - logoSize) / 2;
-                    
-                    // White background for logo (with padding)
-                    const padding = 8;
+                    // White box for QR
                     ctx.fillStyle = 'white';
-                    ctx.fillRect(logoX - padding, logoY - padding, logoSize + padding * 2, logoSize + padding * 2);
+                    ctx.fillRect(padding - 5, headerHeight + padding - 5, qrSize + 10, qrSize + 10);
                     
-                    // Draw logo using canvas (no external images!)
-                    drawPlatformLogo(ctx, platform, logoX, logoY, logoSize);
+                    // Draw QR code
+                    ctx.drawImage(qrImg, padding, headerHeight + padding, qrSize, qrSize);
+
+                    // Draw header text
+                    ctx.fillStyle = style.textColor;
+                    ctx.textAlign = 'center';
+                    
+                    if (style.headerText) {
+                        ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto';
+                        ctx.fillText(style.headerText, totalWidth / 2, 30);
+                    }
+
+                    // Draw footer
+                    const footerY = headerHeight + qrSize + padding + 30;
+                    
+                    if (style.platformText) {
+                        ctx.font = 'bold 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto';
+                        ctx.fillText(style.platformText, totalWidth / 2, footerY);
+                    }
+                    
+                    ctx.font = '18px "Courier New", monospace';
+                    ctx.fillText(username, totalWidth / 2, footerY + 28);
+                    
+                    // Add emoji for Instagram
+                    if (platform === 'instagram') {
+                        ctx.font = '20px Arial';
+                        ctx.fillText('📸', totalWidth / 2 + 80, footerY + 28);
+                    }
                 };
                 
-                // Trigger load if already cached
                 if (qrImg.complete) {
                     qrImg.onload();
                 }
             }, 150);
 
-            // Show result section
+            // Show result
             document.getElementById('qrResult').classList.add('show');
-            
             setTimeout(() => {
                 document.getElementById('qrResult').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }, 100);
@@ -490,43 +484,10 @@
 
         function downloadQR() {
             const canvas = document.getElementById('qrCanvas');
-            const platformName = document.getElementById('platformName').textContent;
-            const username = document.getElementById('usernameDisplay').textContent;
-
-            // Create a new canvas with QR + text
-            const finalCanvas = document.createElement('canvas');
-            const ctx = finalCanvas.getContext('2d');
-            
-            const qrSize = 280;
-            const padding = 25;
-            const textHeight = 60;
-            
-            finalCanvas.width = qrSize + (padding * 2);
-            finalCanvas.height = qrSize + (padding * 2) + textHeight;
-
-            // White background
-            ctx.fillStyle = 'white';
-            ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
-
-            // Draw QR code
-            ctx.drawImage(canvas, padding, padding);
-
-            // Draw text
-            ctx.textAlign = 'center';
-            ctx.fillStyle = '#333';
-            
-            // Platform name
-            ctx.font = '600 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto';
-            ctx.fillText(platformName, finalCanvas.width / 2, qrSize + padding + 25);
-            
-            // Username
-            ctx.fillStyle = '#666';
-            ctx.font = '15px "Courier New", monospace';
-            ctx.fillText(username, finalCanvas.width / 2, qrSize + padding + 45);
-
-            // Download
+            const username = extractUsername(currentURL, currentPlatform);
             const filename = `${currentPlatform}-qr-${username.replace('@', '')}.png`;
-            finalCanvas.toBlob(function(blob) {
+            
+            canvas.toBlob(function(blob) {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
@@ -540,34 +501,10 @@
 
         async function shareQR() {
             const canvas = document.getElementById('qrCanvas');
-            const platformName = document.getElementById('platformName').textContent;
-            const username = document.getElementById('usernameDisplay').textContent;
+            const platformName = platformNames[currentPlatform];
+            const username = extractUsername(currentURL, currentPlatform);
 
-            // Create final canvas (same as download)
-            const finalCanvas = document.createElement('canvas');
-            const ctx = finalCanvas.getContext('2d');
-            
-            const qrSize = 280;
-            const padding = 25;
-            const textHeight = 60;
-            
-            finalCanvas.width = qrSize + (padding * 2);
-            finalCanvas.height = qrSize + (padding * 2) + textHeight;
-
-            ctx.fillStyle = 'white';
-            ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
-            ctx.drawImage(canvas, padding, padding);
-            
-            ctx.textAlign = 'center';
-            ctx.fillStyle = '#333';
-            ctx.font = '600 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto';
-            ctx.fillText(platformName, finalCanvas.width / 2, qrSize + padding + 25);
-            
-            ctx.fillStyle = '#666';
-            ctx.font = '15px "Courier New", monospace';
-            ctx.fillText(username, finalCanvas.width / 2, qrSize + padding + 45);
-
-            finalCanvas.toBlob(async function(blob) {
+            canvas.toBlob(async function(blob) {
                 const file = new File([blob], `${currentPlatform}-qr.png`, { type: 'image/png' });
                 
                 const shareData = {
