@@ -229,6 +229,7 @@
                     <option value="twitter">Twitter / X</option>
                     <option value="instagram">Instagram</option>
                     <option value="whatsapp">WhatsApp Group/Community</option>
+                    <option value="phone">Phone Number</option>
                 </select>
             </div>
 
@@ -276,21 +277,24 @@
             linkedin: 'Example: https://linkedin.com/in/yourname',
             twitter: 'Example: https://twitter.com/yourhandle or https://x.com/yourhandle',
             instagram: 'Example: https://instagram.com/yourhandle',
-            whatsapp: 'Example: https://chat.whatsapp.com/XXXXXXXXXX'
+            whatsapp: 'Example: https://chat.whatsapp.com/XXXXXXXXXX',
+            phone: 'Example: +1-234-567-8900 or +91-98765-43210'
         };
 
         const validationPatterns = {
             linkedin: /^https?:\/\/(www\.)?linkedin\.com\/(in|company)\/[\w-]+\/?$/i,
             twitter: /^https?:\/\/(www\.)?(twitter\.com|x\.com)\/[\w]+\/?$/i,
             instagram: /^https?:\/\/(www\.)?instagram\.com\/[\w.]+\/?$/i,
-            whatsapp: /^https?:\/\/chat\.whatsapp\.com\/[a-zA-Z0-9]+\/?$/i
+            whatsapp: /^https?:\/\/chat\.whatsapp\.com\/[a-zA-Z0-9]+\/?$/i,
+            phone: /^\+?[\d\s\-()]{7,}$/
         };
 
         const platformNames = {
             linkedin: 'LinkedIn',
             twitter: 'Twitter',
             instagram: 'Instagram',
-            whatsapp: 'WhatsApp'
+            whatsapp: 'WhatsApp',
+            phone: 'Phone Number'
         };
 
         // Platform-specific styling configs
@@ -330,6 +334,15 @@
                 borderColor: '#25D366',
                 headerText: 'JOIN ON',
                 platformText: 'WhatsApp'
+            },
+            phone: {
+                qrColor: '#FF8C00',
+                qrLightColor: '#ffffff',
+                bgGradient: ['#FF8C00', '#FF6B35'],
+                textColor: '#ffffff',
+                borderColor: '#FF8C00',
+                headerText: 'CALL ME',
+                platformText: '📱 Phone'
             }
         };
 
@@ -366,6 +379,9 @@
             } else if (platform === 'whatsapp') {
                 const match = url.match(/chat\.whatsapp\.com\/([a-zA-Z0-9]+)/i);
                 username = match ? 'Group ID: ' + match[1].substring(0, 8) : 'WhatsApp Group';
+            } else if (platform === 'phone') {
+                // Clean phone number for display
+                username = url.replace(/[\s()]/g, '');
             }
             
             return username;
@@ -394,6 +410,14 @@
             currentPlatform = platform;
             const username = extractUsername(url, platform);
             const style = platformStyles[platform];
+
+            // Convert phone number to tel: URI for QR encoding
+            let qrEncodeValue = url;
+            if (platform === 'phone') {
+                // Extract only digits and + for tel: URI
+                const phoneDigits = url.replace(/[\s\-()]/g, '');
+                qrEncodeValue = 'tel:' + phoneDigits;
+            }
 
             // Create styled QR on canvas
             const canvas = document.getElementById('qrCanvas');
@@ -442,7 +466,7 @@
             // Generate QR using temporary container
             const tempDiv = document.createElement('div');
             const qr = new QRCode(tempDiv, {
-                text: url,
+                text: qrEncodeValue,
                 width: qrSize,
                 height: qrSize,
                 colorDark: style.qrColor,
