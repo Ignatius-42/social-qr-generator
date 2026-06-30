@@ -297,6 +297,7 @@
         const platformStyles = {
             linkedin: {
                 qrColor: '#0A66C2',
+                qrLightColor: '#ffffff',
                 bgGradient: ['#0A66C2', '#1976D2'],
                 textColor: '#ffffff',
                 borderColor: '#0A66C2',
@@ -305,6 +306,7 @@
             },
             twitter: {
                 qrColor: '#1DA1F2',
+                qrLightColor: '#ffffff',
                 bgColor: '#E8F5FE',
                 textColor: '#1DA1F2',
                 borderColor: '#1DA1F2',
@@ -313,6 +315,7 @@
             },
             instagram: {
                 qrColor: '#E1306C',
+                qrLightColor: '#ffffff',
                 bgGradient: ['#833AB4', '#E1306C', '#FD1D1D'],
                 textColor: '#ffffff',
                 borderColor: '#E1306C',
@@ -321,6 +324,7 @@
             },
             whatsapp: {
                 qrColor: '#25D366',
+                qrLightColor: '#ffffff',
                 bgGradient: ['#25D366', '#128C7E'],
                 textColor: '#ffffff',
                 borderColor: '#25D366',
@@ -442,7 +446,7 @@
                 width: qrSize,
                 height: qrSize,
                 colorDark: style.qrColor,
-                colorLight: 'rgba(0,0,0,0)',
+                colorLight: style.qrLightColor,
                 correctLevel: QRCode.CorrectLevel.H
             });
 
@@ -451,11 +455,7 @@
                 const qrCanvas = tempDiv.querySelector('canvas');
                 
                 if (qrCanvas) {
-                    // White box for QR
-                    ctx.fillStyle = 'white';
-                    ctx.fillRect(padding - 5, headerHeight + padding - 5, qrSize + 10, qrSize + 10);
-                    
-                    // Draw QR code with platform-specific color
+                    // Draw QR code directly (it now has white background built-in)
                     ctx.drawImage(qrCanvas, padding, headerHeight + padding, qrSize, qrSize);
 
                     // Draw header text
