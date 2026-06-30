@@ -289,6 +289,13 @@
             instagram: 'Instagram'
         };
 
+        // Platform logos as SVG data URLs
+        const platformLogos = {
+            linkedin: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMwQTY2QzIiLz48dGV4dCB4PSI1MCIgeT0iNTciIGZvbnQtc2l6ZT0iNDgiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsIj5pbjwvdGV4dD48L3N2Zz4=',
+            twitter: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iNTAiIGN5PSI1MCIgcj0iNTAiIGZpbGw9IiMxREExRjIiLz48dGV4dCB4PSI1MCIgeT0iNjUiIGZvbnQtc2l6ZT0iNjAiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsIj54PC90ZXh0Pjwvc3ZnPg==',
+            instagram: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJncmFkIiB4MT0iMCUiIHkxPSIxMDAlIiB4Mj0iMTAwJSIgeTI9IjAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojODMzQUI0O3N0b3Atb3BhY2l0eToxIiAvPjxzdG9wIG9mZnNldD0iNTAlIiBzdHlsZT0ic3RvcC1jb2xvcjojRjc3NzM3O3N0b3Atb3BhY2l0eToxIiAvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6I0ZEMUQxRDtzdG9wLW9wYWNpdHk6MSIgLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0idXJsKCNncmFkKSIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjI0IiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjQiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI3IiBmaWxsPSJ3aGl0ZSIvPjwvc3ZnPg=='
+        };
+
         // Platform-specific styling configs
         const platformStyles = {
             linkedin: {
@@ -350,6 +357,25 @@
             }
             
             return username;
+        }
+
+        function drawLogoOnQR(ctx, platform, centerX, centerY, logoSize = 50) {
+            return new Promise((resolve) => {
+                // Draw white circular background
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, logoSize + 8, 0, 2 * Math.PI);
+                ctx.fill();
+
+                // Draw logo
+                const logoImg = new Image();
+                logoImg.onload = function() {
+                    ctx.drawImage(logoImg, centerX - logoSize / 2, centerY - logoSize / 2, logoSize, logoSize);
+                    resolve();
+                };
+                logoImg.onerror = () => resolve(); // Continue even if logo fails to load
+                logoImg.src = platformLogos[platform];
+            });
         }
 
         function generateQR() {
@@ -433,45 +459,46 @@
 
             // Wait for QR to generate
             setTimeout(() => {
-                const qrImg = tempDiv.querySelector('img');
+                const qrCanvas = tempDiv.querySelector('canvas');
                 
-                qrImg.onload = function() {
+                if (qrCanvas) {
                     // White box for QR
                     ctx.fillStyle = 'white';
                     ctx.fillRect(padding - 5, headerHeight + padding - 5, qrSize + 10, qrSize + 10);
                     
                     // Draw QR code
-                    ctx.drawImage(qrImg, padding, headerHeight + padding, qrSize, qrSize);
+                    ctx.drawImage(qrCanvas, padding, headerHeight + padding, qrSize, qrSize);
 
-                    // Draw header text
-                    ctx.fillStyle = style.textColor;
-                    ctx.textAlign = 'center';
-                    
-                    if (style.headerText) {
-                        ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto';
-                        ctx.fillText(style.headerText, totalWidth / 2, 30);
-                    }
+                    // Draw logo on QR code (wait for it to load)
+                    const logoCenterX = padding + qrSize / 2;
+                    const logoCenterY = headerHeight + padding + qrSize / 2;
+                    drawLogoOnQR(ctx, platform, logoCenterX, logoCenterY, 45).then(() => {
+                        // Draw header text AFTER logo
+                        ctx.fillStyle = style.textColor;
+                        ctx.textAlign = 'center';
+                        
+                        if (style.headerText) {
+                            ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto';
+                            ctx.fillText(style.headerText, totalWidth / 2, 30);
+                        }
 
-                    // Draw footer
-                    const footerY = headerHeight + qrSize + padding + 30;
-                    
-                    if (style.platformText) {
-                        ctx.font = 'bold 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto';
-                        ctx.fillText(style.platformText, totalWidth / 2, footerY);
-                    }
-                    
-                    ctx.font = '18px "Courier New", monospace';
-                    ctx.fillText(username, totalWidth / 2, footerY + 28);
-                    
-                    // Add emoji for Instagram
-                    if (platform === 'instagram') {
-                        ctx.font = '20px Arial';
-                        ctx.fillText('📸', totalWidth / 2 + 80, footerY + 28);
-                    }
-                };
-                
-                if (qrImg.complete) {
-                    qrImg.onload();
+                        // Draw footer
+                        const footerY = headerHeight + qrSize + padding + 30;
+                        
+                        if (style.platformText) {
+                            ctx.font = 'bold 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto';
+                            ctx.fillText(style.platformText, totalWidth / 2, footerY);
+                        }
+                        
+                        ctx.font = '18px "Courier New", monospace';
+                        ctx.fillText(username, totalWidth / 2, footerY + 28);
+                        
+                        // Add emoji for Instagram
+                        if (platform === 'instagram') {
+                            ctx.font = '20px Arial';
+                            ctx.fillText('📸', totalWidth / 2 + 80, footerY + 28);
+                        }
+                    });
                 }
             }, 150);
 
