@@ -233,6 +233,15 @@
                 </select>
             </div>
 
+            <div class="form-group" id="nameFieldGroup" style="display: none;">
+                <label for="fullName">Your Name</label>
+                <input 
+                    type="text" 
+                    id="fullName" 
+                    placeholder="Enter your full name"
+                >
+            </div>
+
             <div class="form-group">
                 <label for="profileUrl">Profile URL</label>
                 <input 
@@ -353,6 +362,15 @@
             const platform = this.value;
             document.getElementById('example').textContent = examples[platform];
             document.getElementById('error').classList.remove('show');
+            
+            // Show name field only for phone platform
+            const nameField = document.getElementById('nameFieldGroup');
+            if (platform === 'phone') {
+                nameField.style.display = 'block';
+            } else {
+                nameField.style.display = 'none';
+                document.getElementById('fullName').value = '';
+            }
         });
 
         if (navigator.share && navigator.canShare) {
@@ -380,8 +398,10 @@
                 const match = url.match(/chat\.whatsapp\.com\/([a-zA-Z0-9]+)/i);
                 username = match ? 'Group ID: ' + match[1].substring(0, 8) : 'WhatsApp Group';
             } else if (platform === 'phone') {
-                // Clean phone number for display
-                username = url.replace(/[\s()]/g, '');
+                // Display the name and phone number
+                const fullName = document.getElementById('fullName').value.trim();
+                const cleanPhone = url.replace(/[\s()]/g, '');
+                username = `${fullName}\n${cleanPhone}`;
             }
             
             return username;
@@ -400,6 +420,16 @@
                 return;
             }
 
+            // For phone, check if name is provided
+            if (platform === 'phone') {
+                const fullName = document.getElementById('fullName').value.trim();
+                if (!fullName) {
+                    errorEl.textContent = 'Please enter your name';
+                    errorEl.classList.add('show');
+                    return;
+                }
+            }
+
             if (!validateURL(url, platform)) {
                 errorEl.textContent = `This doesn't look like a valid ${platformNames[platform]} profile URL. ${examples[platform]}`;
                 errorEl.classList.add('show');
@@ -411,12 +441,12 @@
             const username = extractUsername(url, platform);
             const style = platformStyles[platform];
 
-            // Convert phone number to tel: URI for QR encoding
+            // Convert phone number to vCard format for QR encoding
             let qrEncodeValue = url;
             if (platform === 'phone') {
-                // Extract only digits and + for tel: URI
                 const phoneDigits = url.replace(/[\s\-()]/g, '');
-                qrEncodeValue = 'tel:' + phoneDigits;
+                const fullName = document.getElementById('fullName').value.trim() || 'Contact';
+                qrEncodeValue = `BEGIN:VCARD\nVERSION:3.0\nFN:${fullName}\nTEL:${phoneDigits}\nEND:VCARD`;
             }
 
             // Create styled QR on canvas
@@ -500,7 +530,15 @@
                     }
                     
                     ctx.font = '18px "Courier New", monospace';
-                    ctx.fillText(username, totalWidth / 2, footerY + 28);
+                    
+                    // Handle multiline text for phone (name + number)
+                    if (platform === 'phone' && username.includes('\n')) {
+                        const lines = username.split('\n');
+                        ctx.fillText(lines[0], totalWidth / 2, footerY + 28);
+                        ctx.fillText(lines[1], totalWidth / 2, footerY + 50);
+                    } else {
+                        ctx.fillText(username, totalWidth / 2, footerY + 28);
+                    }
                     
                     // Add emoji for Instagram
                     if (platform === 'instagram') {
@@ -520,7 +558,9 @@
         function downloadQR() {
             const canvas = document.getElementById('qrCanvas');
             const username = extractUsername(currentURL, currentPlatform);
-            const filename = `${currentPlatform}-qr-${username.replace('@', '')}.png`;
+            // Remove newlines for filename
+            const cleanUsername = username.replace(/\n/g, '-').replace('@', '').replace(/[\s()]/g, '');
+            const filename = `${currentPlatform}-qr-${cleanUsername}.png`;
             
             canvas.toBlob(function(blob) {
                 const url = URL.createObjectURL(blob);
@@ -565,6 +605,7 @@
 
         function clearForm() {
             document.getElementById('profileUrl').value = '';
+            document.getElementById('fullName').value = '';
             document.getElementById('qrResult').classList.remove('show');
             document.getElementById('error').classList.remove('show');
             document.getElementById('profileUrl').focus();
